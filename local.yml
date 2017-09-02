@@ -1,0 +1,33 @@
+version: '2.1'
+
+volumes:
+  postgres_data_dev: {}
+
+services:
+  postgres:
+    image: postgres:9.6
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=POSTGRES_USER
+
+  interface:
+    build:
+      context: .
+      dockerfile: ./compose/interface/Dockerfile-dev
+    command: /start-dev.sh
+    depends_on:
+      - postgres
+    environment:
+      - POSTGRES_USER=POSTGRES_USER
+      - USE_DOCKER=yes
+      - SECRET_KEY=notverysecret
+      - DEBUG=True
+      - DJANGO_SETTINGS_MODULE=config.settings.local
+      - DATABASE_URL=postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@postgres:5432/$POSTGRES_USER
+    volumes:
+      - ./interface/:/app
+      - ./tests/assets:/test/assets
+      # - ./.git/logs/HEAD:/HEAD
+    ports:
+      - "8000:8000"
